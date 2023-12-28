@@ -32,6 +32,8 @@ def save_video_to_local(video_path):
 
 
 def generate(image1, textbox_in, first_run, state, state_, images_tensor):
+
+    print(image1)
     flag = 1
     if not textbox_in:
         if len(state_.messages) > 0:
@@ -47,24 +49,20 @@ def generate(image1, textbox_in, first_run, state, state_, images_tensor):
     if type(state) is not Conversation:
         state = conv_templates[conv_mode].copy()
         state_ = conv_templates[conv_mode].copy()
-        images_tensor = [[], []]
+        images_tensor = []
 
     first_run = False if len(state.messages) > 0 else True
 
     text_en_in = textbox_in.replace("picture", "image")
 
-    # images_tensor = [[], []]
     image_processor = handler.image_processor
     if os.path.exists(image1):
-        tensor = image_processor.preprocess(image1, return_tensors='pt')['pixel_values'][0]
+        tensor = image_processor.preprocess(image1, return_tensors='pt')['pixel_values'][0].to(handler.model.device, dtype=dtype)
         # print(tensor.shape)
-        tensor = tensor.to(handler.model.device, dtype=dtype)
-        images_tensor[0] = images_tensor[0] + [tensor]
-        images_tensor[1] = images_tensor[1] + ['image']
+        images_tensor.append(tensor)
 
     if os.path.exists(image1):
         text_en_in = DEFAULT_IMAGE_TOKEN + '\n' + text_en_in
-
     text_en_out, state_ = handler.generate(images_tensor, text_en_in, first_run=first_run, state=state_)
     state_.messages[-1] = (state_.roles[1], text_en_out)
 
@@ -96,13 +94,16 @@ def clear_history(state, state_):
     state_ = conv_templates[conv_mode].copy()
     return (gr.update(value=None, interactive=True),
             gr.update(value=None, interactive=True), \
-            gr.update(value=None, interactive=True), \
-            True, state, state_, state.to_gradio_chatbot(), [[], []])
+            True, state, state_, state.to_gradio_chatbot(), [])
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--model-path", type=str, default='LanguageBind/MoE-LLaVA-QWen-1.8B-4e2-1f')
 parser.add_argument("--local_rank", type=int, default=-1)
 args = parser.parse_args()
+
+import os
+os.system('pip install --upgrade pip')
+os.system('pip install mpi4py')
 
 model_path = args.model_path
 conv_mode = "v1_qwen"
@@ -181,6 +182,6 @@ with gr.Blocks(title='MoE-LLaVA🚀', theme=gr.themes.Default(), css=block_css) 
                     [image1, textbox, first_run, state, state_, chatbot, images_tensor])
 
 # app = gr.mount_gradio_app(app, demo, path="/")
-demo.launch(share=True)
+demo.launch()
 
 # uvicorn llava.serve.gradio_web_server:app
