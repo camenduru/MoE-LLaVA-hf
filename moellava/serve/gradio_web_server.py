@@ -101,6 +101,7 @@ parser.add_argument("--model-path", type=str, default='LanguageBind/MoE-LLaVA-QW
 parser.add_argument("--local_rank", type=int, default=-1)
 args = parser.parse_args()
 
+'''
 import os
 required_env = ["RANK", "WORLD_SIZE", "MASTER_ADDR", "MASTER_PORT", "LOCAL_RANK"]
 os.environ['RANK'] = '0'
@@ -109,6 +110,7 @@ os.environ['MASTER_ADDR'] = "192.168.1.201"
 os.environ['MASTER_PORT'] = '29501'
 os.environ['LOCAL_RANK'] = '0'
 # if auto_mpi_discovery and not all(map(lambda v: v in os.environ, required_env)):
+'''
 
 model_path = args.model_path
 conv_mode = "v1_qwen"
