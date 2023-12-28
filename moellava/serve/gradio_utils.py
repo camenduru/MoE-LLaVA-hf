@@ -56,6 +56,9 @@ class Chat:
     def __init__(self, model_path, conv_mode, model_base=None, load_8bit=False, load_4bit=False, device='cuda'):
         disable_torch_init()
         model_name = get_model_name_from_path(model_path)
+        print(load_8bit, load_4bit)
+        load_4bit = False
+        load_8bit = False
         self.tokenizer, self.model, processor, context_len = load_pretrained_model(model_path, model_base, model_name,
                                                                          load_8bit, load_4bit,
                                                                          device=device)
