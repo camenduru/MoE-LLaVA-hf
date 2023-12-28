@@ -1,5 +1,5 @@
 --extra-index-url https://download.pytorch.org/whl/cu118
-pip
+pip==23.3
 einops
 fastapi
 markdown2[all]
