@@ -57,7 +57,7 @@ def generate(image1, textbox_in, first_run, state, state_, images_tensor):
 
     image_processor = handler.image_processor
     if os.path.exists(image1):
-        tensor = image_processor.preprocess(image1, return_tensors='pt')['pixel_values'][0].to(handler.model.device, dtype=dtype)
+        tensor = image_processor.preprocess(Image.open(image1).convert('RGB'), return_tensors='pt')['pixel_values'][0].to(handler.model.device, dtype=dtype)
         # print(tensor.shape)
         images_tensor.append(tensor)
 
@@ -77,8 +77,10 @@ def generate(image1, textbox_in, first_run, state, state_, images_tensor):
         state.append_message(state.roles[0], textbox_in + "\n" + show_images)
     state.append_message(state.roles[1], textbox_out)
 
+    # return (state, state_, state.to_gradio_chatbot(), False, gr.update(value=None, interactive=True), images_tensor,
+    #         gr.update(value=image1 if os.path.exists(image1) else None, interactive=True))
     return (state, state_, state.to_gradio_chatbot(), False, gr.update(value=None, interactive=True), images_tensor,
-            gr.update(value=image1 if os.path.exists(image1) else None, interactive=True))
+            gr.update(value=None, interactive=True))
 
 
 def regenerate(state, state_):
@@ -97,28 +99,36 @@ def clear_history(state, state_):
             True, state, state_, state.to_gradio_chatbot(), [])
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--model-path", type=str, default='LanguageBind/MoE-LLaVA-QWen-1.8B-4e2-1f')
+parser.add_argument("--model-path", type=str, default='LanguageBind/MoE-LLaVA-Phi2-2.7B-4e')
 parser.add_argument("--local_rank", type=int, default=-1)
 args = parser.parse_args()
 
-'''
-import os
-required_env = ["RANK", "WORLD_SIZE", "MASTER_ADDR", "MASTER_PORT", "LOCAL_RANK"]
-os.environ['RANK'] = '0'
-os.environ['WORLD_SIZE'] = '1'
-os.environ['MASTER_ADDR'] = "192.168.1.201"
-os.environ['MASTER_PORT'] = '29501'
-os.environ['LOCAL_RANK'] = '0'
+# import os
+# required_env = ["RANK", "WORLD_SIZE", "MASTER_ADDR", "MASTER_PORT", "LOCAL_RANK"]
+# os.environ['RANK'] = '0'
+# os.environ['WORLD_SIZE'] = '1'
+# os.environ['MASTER_ADDR'] = "192.168.1.201"
+# os.environ['MASTER_PORT'] = '29501'
+# os.environ['LOCAL_RANK'] = '0'
 # if auto_mpi_discovery and not all(map(lambda v: v in os.environ, required_env)):
-'''
 
 model_path = args.model_path
-conv_mode = "v1_qwen"
+
+if 'qwen' in model_path.lower():  # FIXME: first
+    conv_mode = "qwen"
+elif 'openchat' in model_path.lower():  # FIXME: first
+    conv_mode = "openchat"
+elif 'phi' in model_path.lower():  # FIXME: first
+    conv_mode = "phi"
+elif 'stablelm' in model_path.lower():  # FIXME: first
+    conv_mode = "stablelm"
+else:
+    conv_mode = "v1"
 device = 'cuda'
 load_8bit = False
-load_4bit = False
+load_4bit = False if 'moe' in model_path.lower() else True
 dtype = torch.half
-handler = Chat(model_path, conv_mode=conv_mode, load_8bit=load_8bit, load_4bit=load_8bit, device=device)
+handler = Chat(model_path, conv_mode=conv_mode, load_8bit=load_8bit, load_4bit=load_4bit, device=device)
 handler.model.to(dtype=dtype)
 if not os.path.exists("temp"):
     os.makedirs("temp")

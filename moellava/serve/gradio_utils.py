@@ -11,11 +11,11 @@ from moellava.utils import disable_torch_init
 
 title_markdown = ("""
 <div style="display: flex; justify-content: center; align-items: center; text-align: center;">
-  <a href="https://github.com/PKU-YuanGroup/LanguageBind" style="margin-right: 20px; text-decoration: none; display: flex; align-items: center;">
-    <img src="https://z1.ax1x.com/2023/11/07/pil4sqH.png" alt="LanguageBind🚀" style="max-width: 120px; height: auto;">
+  <a href="https://github.com/PKU-YuanGroup/MoE-LLaVA" style="margin-right: 20px; text-decoration: none; display: flex; align-items: center;">
+    <img src="https://s11.ax1x.com/2023/12/28/piqvDMV.png" alt="MoE-LLaVA🚀" style="max-width: 120px; height: auto;">
   </a>
   <div>
-    <h1 >Video-LLaVA: Improved LLaVA with United Visual Representation</h1>
+    <h1 >MoE-LLaVA: Mixture of Experts for Large Vision-Language Models</h1>
     <h5 style="margin: 0;">If you like our project, please give us a star ✨ on Github for the latest update.</h5>
   </div>
 </div>
@@ -23,9 +23,9 @@ title_markdown = ("""
 
 <div align="center">
     <div style="display:flex; gap: 0.25rem;" align="center">
-        <a href='https://github.com/PKU-YuanGroup/LanguageBind'><img src='https://img.shields.io/badge/Github-Code-blue'></a>
+        <a href='https://github.com/PKU-YuanGroup/MoE-LLaVA'><img src='https://img.shields.io/badge/Github-Code-blue'></a>
         <a href="https://arxiv.org/pdf/2310.01852.pdf"><img src="https://img.shields.io/badge/Arxiv-2310.01852-red"></a>
-        <a href='https://github.com/PKU-YuanGroup/LanguageBind/stargazers'><img src='https://img.shields.io/github/stars/PKU-YuanGroup/LanguageBind.svg?style=social'></a>
+        <a href='https://github.com/PKU-YuanGroup/MoE-LLaVA/stargazers'><img src='https://img.shields.io/github/stars/PKU-YuanGroup/MoE-LLaVA.svg?style=social'></a>
     </div>
 </div>
 """)
@@ -36,7 +36,6 @@ block_css = """
 }
 """
 
-
 tos_markdown = ("""
 ### Terms of use
 By using this service, users are required to agree to the following terms:
@@ -44,7 +43,6 @@ The service is a research preview intended for non-commercial use only. It only 
 Please click the "Flag" button if you get any inappropriate answer! We will collect those to keep improving our moderator.
 For an optimal experience, please use desktop computers for this demo, as mobile devices may compromise its quality.
 """)
-
 
 learn_more_markdown = ("""
 ### License
@@ -56,12 +54,9 @@ class Chat:
     def __init__(self, model_path, conv_mode, model_base=None, load_8bit=False, load_4bit=False, device='cuda'):
         disable_torch_init()
         model_name = get_model_name_from_path(model_path)
-        print(load_8bit, load_4bit)
-        load_4bit = False
-        load_8bit = False
         self.tokenizer, self.model, processor, context_len = load_pretrained_model(model_path, model_base, model_name,
-                                                                         load_8bit, load_4bit,
-                                                                         device=device)
+                                                                                   load_8bit, load_4bit,
+                                                                                   device=device)
         self.image_processor = processor['image']
         self.video_processor = processor['video']
         self.conv_mode = conv_mode
@@ -82,13 +77,16 @@ class Chat:
         print('\n\n\n')
         print(prompt)
 
-        input_ids = tokenizer_image_token(prompt, tokenizer, IMAGE_TOKEN_INDEX, return_tensors='pt').unsqueeze(0).to(self.device)
-        
+        input_ids = tokenizer_image_token(prompt, tokenizer, IMAGE_TOKEN_INDEX, return_tensors='pt').unsqueeze(0).to(
+            self.device)
+
         temperature = 0.2
-        
+
         max_new_tokens = 1024
 
-        stop_str = conv_templates[self.conv_mode].copy().sep if conv_templates[self.conv_mode].copy().sep_style != SeparatorStyle.TWO else conv_templates[self.conv_mode].copy().sep2
+        stop_str = conv_templates[self.conv_mode].copy().sep if conv_templates[
+                                                                    self.conv_mode].copy().sep_style != SeparatorStyle.TWO else \
+        conv_templates[self.conv_mode].copy().sep2
         keywords = [stop_str]
         stopping_criteria = KeywordsStoppingCriteria(keywords, tokenizer, input_ids)
         streamer = TextStreamer(tokenizer, skip_prompt=True, skip_special_tokens=True)

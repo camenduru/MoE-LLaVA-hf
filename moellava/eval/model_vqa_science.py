@@ -32,14 +32,21 @@ def eval_model(args):
     model_path = os.path.expanduser(args.model_path)
     model_name = get_model_name_from_path(model_path)
     tokenizer, model, processor, context_len = load_pretrained_model(model_path, args.model_base, model_name)
-
+    if args.return_gating_logit is not None:
+        from moellava.utils import get_gating_logit_by_hook
+        print(model)
+        fea_hooks = get_gating_logit_by_hook(model)
+        all_gating_logits = {}
     image_processor = processor['image']
     questions = json.load(open(os.path.expanduser(args.question_file), "r"))
     questions = get_chunk(questions, args.num_chunks, args.chunk_idx)
     answers_file = os.path.expanduser(args.answers_file)
     os.makedirs(os.path.dirname(answers_file), exist_ok=True)
     ans_file = open(answers_file, "w")
+
+    cnt = -1
     for i, line in enumerate(tqdm(questions)):
+        cnt += 1
         idx = line["id"]
         question = line['conversations'][0]
         qs = question['value'].replace('<image>', '').strip()
@@ -80,14 +87,25 @@ def eval_model(args):
                 do_sample=True if args.temperature > 0 else False,
                 temperature=args.temperature,
                 max_new_tokens=1024,
-                use_cache=True,
+                use_cache=True if args.return_gating_logit is None else False,
                 stopping_criteria=stopping_criteria,
             )
+        if args.return_gating_logit is not None:
+            # import ipdb
+            # ipdb.set_trace()
+            all_gating_logits[cnt] = dict(gating_logit=[i.fea for i in fea_hooks],
+                                          images=images if images is None else images.detach().cpu(),
+                                          input_ids=input_ids.detach().cpu(),
+                                          output_ids=output_ids.detach().cpu())
+            print(input_ids.shape, output_ids.shape, fea_hooks[0].fea.shape, images.shape if images is not None else [])
+            # assert fea_hooks[0].fea.shape[0] + 1 == output_ids.shape[1] + 575
+            print('The number of hooks is:', len(fea_hooks))
         # print(output_ids)
         # import ipdb
         # ipdb.set_trace()
         input_token_len = input_ids.shape[1]
         n_diff_input_output = (input_ids != output_ids[:, :input_token_len]).sum().item()
+        print(output_ids[:, input_token_len:])
         if n_diff_input_output > 0:
             print(f'[Warning] {n_diff_input_output} output_ids are not the same as the input_ids')
         outputs = tokenizer.batch_decode(output_ids[:, input_token_len:], skip_special_tokens=True)[0]
@@ -113,6 +131,7 @@ def eval_model(args):
 
             input_token_len = input_ids.shape[1]
             n_diff_input_output = (input_ids != output_ids[:, :input_token_len]).sum().item()
+            print(output_ids[:, input_token_len:])
             if n_diff_input_output > 0:
                 print(f'[Warning] {n_diff_input_output} output_ids are not the same as the input_ids')
             outputs = tokenizer.batch_decode(output_ids[:, input_token_len:], skip_special_tokens=True)[0]
@@ -132,6 +151,9 @@ def eval_model(args):
         ans_file.flush()
     ans_file.close()
 
+    if args.return_gating_logit is not None:
+        torch.save(all_gating_logits, f'{args.return_gating_logit}.pt')
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model-path", type=str, default="facebook/opt-350m")
@@ -146,6 +168,7 @@ if __name__ == "__main__":
     parser.add_argument("--answer-prompter", action="store_true")
     parser.add_argument("--single-pred-prompt", action="store_true")
     parser.add_argument("--local_rank", type=int, default=-1)
+    parser.add_argument("--return_gating_logit", type=str, default=None)
     args = parser.parse_args()
 
     eval_model(args)

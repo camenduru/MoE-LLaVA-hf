@@ -544,6 +544,7 @@ class MoELLaVAQWenForCausalLM(QWenLMHeadModel, LlavaQWenMetaForCausalLM):
     def initialize_moe_modules(self, model_args):
 
         self.config.moe['moe_enable'] = model_args.moe_enable
+        self.config.moe['train_modules'] = model_args.train_modules
         self.config.moe['moe_mode'] = model_args.moe_mode
         self.config.moe['moe_layers_idx'] = model_args.moe_layers_idx
         self.config.moe['ep_size']= model_args.ep_size
@@ -553,11 +554,11 @@ class MoELLaVAQWenForCausalLM(QWenLMHeadModel, LlavaQWenMetaForCausalLM):
         self.config.moe['min_capacity'] = model_args.min_capacity
         self.config.moe['use_residual'] = model_args.use_residual
         self.config.moe['router_aux_loss_coef'] = self.router_aux_loss_coef = model_args.router_aux_loss_coef
-        self.config.moe['train_modules'] = [
-                # 'mlp.w1', 'mlp.w2', 'mlp.c_proj', 'wg',
-                # 'wte', 'lm_head'
-            ]
-        if len(self.config.moe['train_modules']) > 0:
+        # self.config.moe['train_modules'] = [
+        #         # 'mlp.w1', 'mlp.w2', 'mlp.c_proj', 'wg',
+        #         # 'wte', 'lm_head'
+        #     ]
+        if self.config.moe['train_modules'] is not None and len(self.config.moe['train_modules']) > 0:
             for n, p in self.named_parameters():
                 if any(name in n for name in self.config.moe['train_modules']):
                     continue
