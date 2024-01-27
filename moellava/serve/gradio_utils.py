@@ -9,6 +9,7 @@ from moellava.mm_utils import get_model_name_from_path, KeywordsStoppingCriteria
 from moellava.model.builder import load_pretrained_model
 from moellava.utils import disable_torch_init
 
+# <a href="https://arxiv.org/pdf/2310.01852.pdf"><img src="https://img.shields.io/badge/Arxiv-2310.01852-red"></a>
 title_markdown = ("""
 <div style="display: flex; justify-content: center; align-items: center; text-align: center;">
   <a href="https://github.com/PKU-YuanGroup/MoE-LLaVA" style="margin-right: 20px; text-decoration: none; display: flex; align-items: center;">
@@ -24,7 +25,6 @@ title_markdown = ("""
 <div align="center">
     <div style="display:flex; gap: 0.25rem;" align="center">
         <a href='https://github.com/PKU-YuanGroup/MoE-LLaVA'><img src='https://img.shields.io/badge/Github-Code-blue'></a>
-        <a href="https://arxiv.org/pdf/2310.01852.pdf"><img src="https://img.shields.io/badge/Arxiv-2310.01852-red"></a>
         <a href='https://github.com/PKU-YuanGroup/MoE-LLaVA/stargazers'><img src='https://img.shields.io/github/stars/PKU-YuanGroup/MoE-LLaVA.svg?style=social'></a>
     </div>
 </div>
