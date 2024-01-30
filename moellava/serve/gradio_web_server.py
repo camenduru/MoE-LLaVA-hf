@@ -99,7 +99,7 @@ def clear_history(state, state_):
             True, state, state_, state.to_gradio_chatbot(), [])
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--model-path", type=str, default='LanguageBind/MoE-LLaVA-Phi2-2.7B-4e')
+parser.add_argument("--model-path", type=str, default='LanguageBind/MoE-LLaVA-Phi2-2.7B-4e-384')
 parser.add_argument("--local_rank", type=int, default=-1)
 args = parser.parse_args()
 
