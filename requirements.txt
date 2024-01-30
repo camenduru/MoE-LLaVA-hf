@@ -14,7 +14,7 @@ wandb
 shortuuid
 httpx==0.24.0
 peft==0.4.0
-transformers==4.36.2
+transformers==4.37.0
 accelerate==0.21.0
 bitsandbytes==0.41.0
 scikit-learn==1.2.2
